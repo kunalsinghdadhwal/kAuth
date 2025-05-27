@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
+import { ErrorContext } from "better-auth/react";
 
 export default function Page() {
   const [code, setCode] = useState("");
@@ -32,10 +32,26 @@ export default function Page() {
       return;
     }
 
+    let reqToastId: string | number;
     setIsVerifying(true);
 
     const { data, error } = await authClient.twoFactor.verifyTotp({
       code,
+    }, {
+        onRequest: () => {
+          reqToastId = toast.loading("Verifying code...");
+        },
+        onSuccess: () => {
+            toast.dismiss(reqToastId);
+            toast.success("Code verified successfully!", {
+                id: reqToastId,
+            })
+        },
+        onError: (ctx: ErrorContext) => {
+          toast.error(`Error verifying code: ${ctx.error.message}`, {
+            id: reqToastId,
+          });
+        }
     });
 
     setIsVerifying(false);
@@ -50,13 +66,34 @@ export default function Page() {
   };
 
   const handleBackupCodeVerify = async () => {
-    if (backupCode.length < 8) {
+    if (backupCode.length < 10) {
       toast.error("Please enter a valid backup code");
       return;
     }
-
+    let reqToastId: string | number;
     setIsVerifying(true);
 
+      const { data, error } = await authClient.twoFactor.verifyBackupCode({
+        code: backupCode,
+      }, {
+        onRequest: () => {
+          reqToastId = toast.loading("Verifying backup code...");
+          },
+        onSuccess: () => {
+          toast.dismiss(reqToastId);
+          toast.success("Backup code verified successfully!", {
+            id: reqToastId,
+          });
+            setTimeout(() => { 
+                router.push("/dashboard");
+            }, 500)
+          },
+        onError: (ctx: ErrorContext) => {
+            toast.error(`Error verifying backup code: ${ctx.error.message}`, {
+            id: reqToastId,
+          });
+        }
+      });
     setIsVerifying(false);
   };
 
@@ -91,7 +128,7 @@ export default function Page() {
                 <Input
                   type="text"
                   maxLength={1}
-                  className="w-14 h-14 text-xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-14 h-14 !text-2xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     if (value) {
@@ -122,7 +159,7 @@ export default function Page() {
                 <Input
                   type="text"
                   maxLength={1}
-                  className="w-14 h-14 text-xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-14 h-14 !text-2xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     if (value) {
@@ -150,7 +187,7 @@ export default function Page() {
                 <Input
                   type="text"
                   maxLength={1}
-                  className="w-14 h-14 text-xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-14 h-14 !text-2xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     if (value) {
@@ -178,7 +215,7 @@ export default function Page() {
                 <Input
                   type="text"
                   maxLength={1}
-                  className="w-14 h-14 text-xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-14 h-14 !text-2xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     if (value) {
@@ -206,7 +243,7 @@ export default function Page() {
                 <Input
                   type="text"
                   maxLength={1}
-                  className="w-14 h-14 text-xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-14 h-14 !text-2xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     if (value) {
@@ -234,7 +271,7 @@ export default function Page() {
                 <Input
                   type="text"
                   maxLength={1}
-                  className="w-14 h-14 text-xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-14 h-14 !text-2xl font-medium text-center bg-white/5 border-white/10 text-white focus:border-white/30 focus:ring-white/10 transition-all duration-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   onChange={(e) => {
                     const value = e.target.value.replace(/[^0-9]/g, "");
                     if (value) {
@@ -261,13 +298,7 @@ export default function Page() {
 
             {/* Verify Button */}
             <Button
-              onClick={() => {
-                toast.promise(handleVerify, {
-                  loading: "Verifying...",
-                  success: "Code verified successfully!",
-                  error: "Error verifying code. Please try again.",
-                });
-              }}
+              onClick={handleVerify}
               disabled={code.length !== 6 || isVerifying}
               className="w-full h-11 text-base font-medium bg-white text-black hover:bg-gray-100 disabled:bg-white/10 disabled:text-white/40 transition-all duration-200"
             >
